@@ -1,6 +1,6 @@
 # grammar/rules.py
 import re
-from grammar.verbs import agree_adjective, present_conjugate
+from verbs import agree_adjective, present_conjugate
 
 # Tiny bilingual lexicon (grow over time)
 LEX_ADJ = {
