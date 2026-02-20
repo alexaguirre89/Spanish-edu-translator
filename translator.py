@@ -1,4 +1,4 @@
-from grammar.rules import RULES
+from rules import RULES
 
 def translate(text: str, dialect: str, mode: str, speaker_gender: str, you_form: str):
     cleaned = " ".join(text.strip().split())
