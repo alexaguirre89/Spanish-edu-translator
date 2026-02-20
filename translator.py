@@ -1,28 +1,18 @@
-def translate(text, dialect="mx", mode="translate"):
-    text = text.lower().strip()
+from grammar.rules import RULES
 
-    # VERY simple examples to start
-    if text == "i am tired":
-        if mode == "hint":
-            return {
-                "output": None,
-                "explanation": "Use ESTAR for feelings or temporary states.",
-                "hint": "Verb: estar (present, yo) + adjective cansado/a"
-            }
+def translate(text: str, dialect: str, mode: str, speaker_gender: str, you_form: str):
+    cleaned = " ".join(text.strip().split())
+    for rule in RULES:
+        result = rule(cleaned, dialect=dialect, mode=mode, speaker_gender=speaker_gender, you_form=you_form)
+        if result is None:
+            continue
+        # A rule matched and returned something (success or a safe error)
+        return result
 
-        return {
-            "output": "Estoy cansado." if dialect == "mx" else "Estoy cansado.",
-            "explanation": "We use ESTAR because 'tired' is a feeling, not a permanent trait."
-        }
-
-    if text == "i am happy":
-        return {
-            "output": "Estoy contento.",
-            "explanation": "Happiness is treated as a temporary emotional state, so ESTAR is used."
-        }
-
-    # fallback
+    # No rules matched: correctness-first response
     return {
-        "output": "Translation not supported yet.",
-        "explanation": "This sentence pattern is not implemented in the MVP."
+        "error": "I can’t safely translate this sentence yet (correctness-first). Try simpler patterns like 'I am + adjective', 'I am + -ing', or 'I like + noun'.",
+        "callouts": [
+            {"title": "What to try next", "text": "Examples: 'I am tired.' 'I am studying.' 'I like soccer.'"}
+        ]
     }
