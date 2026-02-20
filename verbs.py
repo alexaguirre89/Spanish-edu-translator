@@ -1,0 +1,96 @@
+# grammar/verbs.py
+
+SER_PRESENT = {"yo": "soy", "tu": "eres", "usted": "es", "el": "es", "ella": "es", "nosotros": "somos", "nosotras": "somos", "ellos": "son", "ellas": "son", "ustedes": "son"}
+ESTAR_PRESENT = {"yo": "estoy", "tu": "estas", "usted": "esta", "el": "esta", "ella": "esta", "nosotros": "estamos", "nosotras": "estamos", "ellos": "estan", "ellas": "estan", "ustedes": "estan"}
+IR_PRESENT = {"yo": "voy", "tu": "vas", "usted": "va", "el": "va", "ella": "va", "nosotros": "vamos", "nosotras": "vamos", "ellos": "van", "ellas": "van", "ustedes": "van"}
+TENER_PRESENT = {"yo": "tengo", "tu": "tienes", "usted": "tiene", "el": "tiene", "ella": "tiene", "nosotros": "tenemos", "nosotras": "tenemos", "ellos": "tienen", "ellas": "tienen", "ustedes": "tienen"}
+
+YO_GO_PRESENT = {
+    "hacer": "hago",
+    "poner": "pongo",
+    "salir": "salgo",
+    "venir": "vengo",
+    "decir": "digo",
+    "tener": "tengo",
+    "traer": "traigo",
+    "oír": "oigo",
+}
+
+# Minimal present endings (regular)
+PRESENT_ENDINGS = {
+    "ar": {"yo": "o", "tu": "as", "usted": "a", "el": "a", "ella": "a", "nosotros": "amos", "nosotras": "amos", "ellos": "an", "ellas": "an", "ustedes": "an"},
+    "er": {"yo": "o", "tu": "es", "usted": "e", "el": "e", "ella": "e", "nosotros": "emos", "nosotras": "emos", "ellos": "en", "ellas": "en", "ustedes": "en"},
+    "ir": {"yo": "o", "tu": "es", "usted": "e", "el": "e", "ella": "e", "nosotros": "imos", "nosotras": "imos", "ellos": "en", "ellas": "en", "ustedes": "en"},
+}
+
+# Common stem-changers (present) mapping for the boot (not nosotros/vosotros)
+STEM_CHANGES = {
+    # e->ie
+    "pensar": ("e", "ie"),
+    "querer": ("e", "ie"),
+    "cerrar": ("e", "ie"),
+    "empezar": ("e", "ie"),
+    "preferir": ("e", "ie"),
+    # o->ue
+    "poder": ("o", "ue"),
+    "dormir": ("o", "ue"),
+    "volver": ("o", "ue"),
+    "contar": ("o", "ue"),
+    # e->i
+    "pedir": ("e", "i"),
+    "servir": ("e", "i"),
+    "repetir": ("e", "i"),
+}
+
+def strip_accents(s: str) -> str:
+    # keep MVP simple: you can add proper accenting later
+    return s
+
+def agree_adjective(adj_lemma: str, gender: str, number: str) -> str:
+    w = adj_lemma.lower()
+    gender = gender.lower()  # m/f
+    number = number.lower()  # s/p
+
+    if w.endswith("o"):
+        base = w[:-1]
+        if gender == "m" and number == "s": return base + "o"
+        if gender == "f" and number == "s": return base + "a"
+        if gender == "m" and number == "p": return base + "os"
+        if gender == "f" and number == "p": return base + "as"
+
+    # adjectives like inteligente/triste
+    if number == "s":
+        return w
+    if w.endswith(("a", "e", "i", "o", "u")):
+        return w + "s"
+    return w + "es"
+
+def present_conjugate(verb_inf: str, subject: str) -> str | None:
+    v = verb_inf.lower()
+
+    # built-ins
+    if v == "ser": return SER_PRESENT.get(subject)
+    if v == "estar": return ESTAR_PRESENT.get(subject)
+    if v == "ir": return IR_PRESENT.get(subject)
+    if v == "tener": return TENER_PRESENT.get(subject)
+
+    # yo-go
+    if subject == "yo" and v in YO_GO_PRESENT:
+        return YO_GO_PRESENT[v]
+
+    # regular
+    if len(v) < 3:
+        return None
+    ending = v[-2:]
+    stem = v[:-2]
+    if ending not in ("ar", "er", "ir"):
+        return None
+
+    # stem-change (boot only)
+    if v in STEM_CHANGES and subject not in ("nosotros", "nosotras"):
+        old, new = STEM_CHANGES[v]
+        idx = stem.rfind(old)
+        if idx != -1:
+            stem = stem[:idx] + new + stem[idx+len(old):]
+
+    return stem + PRESENT_ENDINGS[ending].get(subject, "")
